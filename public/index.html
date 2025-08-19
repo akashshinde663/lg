@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Consent-based Click Analytics (Demo)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+    .card { max-width: 700px; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; }
+    .row { display: flex; gap: 8px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+    button { padding: 10px 16px; border: none; border-radius: 8px; cursor: pointer; }
+    .primary { background: #111827; color: white; }
+    .muted { background: #f3f4f6; }
+    .note { font-size: 0.9rem; color: #4b5563; }
+    .status { margin-top: 1rem; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Consent-based Click Analytics (Demo)</h2>
+    <p class="note">
+      This demo records a click <strong>only if you consent</strong>. We store an anonymized IP (coarse), a hashed IP, the page, action, user agent, and coarse geolocation (if available).
+      No precise location is collected. See <code>logs.jsonl</code> on the server.
+    </p>
+
+    <div class="row">
+      <input type="checkbox" id="consentBox" />
+      <label for="consentBox">I agree to share coarse analytics for this click.</label>
+    </div>
+
+    <div class="row">
+      <input id="actionInput" placeholder="Action label (e.g., 'cta-click')" />
+      <button class="primary" id="trackBtn">Track Click</button>
+      <button class="muted" id="viewPolicyBtn">View Privacy Note</button>
+    </div>
+
+    <pre class="note" id="policy" style="display:none;">
+We collect minimal analytics after your consent:
+- Anonymized IP (coarse) and a salted hash of your IP
+- Approximate geolocation (country/region/city), if available
+- Page path, action, timestamp, and user agent
+We do not store precise location or full IP. Retention example: 30 days.
+Contact us to request deletion by providing timestamp + action.
+    </pre>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script>
+    const trackBtn = document.getElementById("trackBtn");
+    const statusEl = document.getElementById("status");
+    const policy = document.getElementById("policy");
+    const viewPolicyBtn = document.getElementById("viewPolicyBtn");
+
+    viewPolicyBtn.addEventListener("click", () => {
+      policy.style.display = policy.style.display === "none" ? "block" : "none";
+    });
+
+    trackBtn.addEventListener("click", async () => {
+      const consent = document.getElementById("consentBox").checked;
+      const action = document.getElementById("actionInput").value || "cta-click";
+
+      statusEl.textContent = "Sending...";
+      try {
+        const res = await fetch("/api/record-click", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            consent,
+            page: location.pathname + location.search + location.hash,
+            action
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.textContent = "Thanks! Click recorded (with your consent).";
+          console.log("Stored:", data.stored);
+        } else {
+          statusEl.textContent = "Not recorded: " + (data.error || "unknown error");
+        }
+      } catch (e) {
+        statusEl.textContent = "Network error. Check server console.";
+      }
+    });
+  </script>
+</body>
+</html>
