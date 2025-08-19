@@ -1,16 +1,22 @@
 {
-  "name": "consentful-analytics-demo",
+  "name": "logger-mongo-raw",
   "version": "1.0.0",
-  "description": "Privacy-respecting, consent-based click analytics",
-  "main": "server.js",
+  "description": "Consent-based one-click logger with MongoDB (stores raw + private IPs when consented)",
   "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "start": "node server.js",
-    "dev": "NODE_ENV=development node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2",
-    "geoip-lite": "^1.4.7"
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "geoip-lite": "^1.4.10",
+    "helmet": "^7.2.0",
+    "mongoose": "^8.17.2",
+    "morgan": "^1.10.1"
   }
 }
